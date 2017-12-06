@@ -8,7 +8,9 @@ import "fmt"
 // GoDsm define interface
 type GoDsm interface {
 	APIInfo(api string) (*DsmAPIInfo, error)
+	Login(user string, passwd string, sid bool) error
 	LoadAllAPIInfo() error
+	Logout() error
 }
 
 // DsmError error

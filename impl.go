@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strconv"
 	"strings"
-	//	"net/http/cookiejar"
 )
 
 // GoDsmImpl implements interface
@@ -45,6 +45,7 @@ func (c *GoDsmImpl) LoadAllAPIInfo() error {
 		map[string]string{
 			"query": "all",
 		},
+		map[int]string{},
 	)
 	if nil == err {
 		// To json and Back to array of structs.
@@ -82,7 +83,7 @@ func (c *GoDsmImpl) APIInfo(api string) (*DsmAPIInfo, error) {
 }
 
 // send send a query
-func (c *GoDsmImpl) get(api string, version int, method string, params map[string]string) (interface{}, error) {
+func (c *GoDsmImpl) get(api string, version int, method string, params map[string]string, respErrors map[int]string) (interface{}, error) {
 	apiInfo, err := c.APIInfo(api)
 	if nil != err {
 		return nil, err
@@ -110,6 +111,7 @@ func (c *GoDsmImpl) get(api string, version int, method string, params map[strin
 		return nil, err
 	}
 
+	// Parse json
 	var data interface{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
@@ -117,25 +119,121 @@ func (c *GoDsmImpl) get(api string, version int, method string, params map[strin
 	}
 
 	// analyse response
+	// TODO check data type (map[string]interface{})
 	jsonMap := data.(map[string]interface{})
 	success := jsonMap["success"].(bool)
 	if success {
 		return jsonMap["data"], nil
-	} else {
-		fmt.Println(data)
 	}
-	return nil, nil
+	// check error code and convert it to DsmError
+	code := c.errCode(jsonMap)
+
+	return nil, c.errorFromCode(code, respErrors)
+}
+
+// errCode extract error code from response
+func (c *GoDsmImpl) errCode(data map[string]interface{}) int {
+	code := 0
+	err, found := data["error"]
+	if found {
+		// TODO : check err type !
+		code = int(err.(map[string]interface{})["code"].(float64))
+	}
+	return code
+}
+
+// errorFromCode convert Error code into an DsmError.
+func (c *GoDsmImpl) errorFromCode(code int, respErrors map[int]string) error {
+	// Try errors for given service
+	msg, found := respErrors[code]
+	if !found {
+		// Try commons errors
+		switch code {
+		case 100:
+			msg = "Unknown error"
+		case 101:
+			msg = "Invalid parameter"
+		case 102:
+			msg = "The requested API does not exist"
+		case 103:
+			msg = "The requested method does not exist"
+		case 104:
+			msg = "The requested version does not support the functionality"
+		case 105:
+			msg = "The logged in session does not have permission"
+		case 106:
+			msg = "Session timeout"
+		case 107:
+			msg = "Session interrupted by duplicate login"
+		default:
+			msg = "Unknown Error"
+		}
+	}
+	return &DsmError{Code: code, Msg: msg}
 }
 
 // Login Try to connect given user.
 // if sid is true, use sid for session tracking, otherwise use cookie
 func (c *GoDsmImpl) Login(user string, passwd string, sid bool) error {
-	return nil
+	format := "cookie"
+	if sid {
+		format = "sid"
+	} else {
+		// Set a store for cookies
+		cookieJar, err := cookiejar.New(nil)
+		if nil != err {
+			return err
+		}
+		c.httpClient.Jar = cookieJar
+	}
+	// TODO : create a uniq session
+	c.session = "TEST"
+	data, err := c.get("SYNO.API.Auth", 2, "login",
+		map[string]string{
+			"account": user,
+			"passwd":  passwd,
+			"session": c.session,
+			"format":  format,
+		},
+		map[int]string{
+			400: "No such account or incorrect password",
+			401: "Account disabled",
+			402: "Permission denied",
+			403: "2-step verification code required",
+			404: "Failed to authenticate 2-step verification code",
+		},
+	)
+	if nil == err {
+		// fetch sid
+		fmt.Println(data)
+	} else {
+		// clear session ID
+		c.session = ""
+		c.httpClient.Jar = nil
+		c.sid = ""
+	}
+	return err
 }
 
 // Logout logout current session.
 func (c *GoDsmImpl) Logout() error {
-	return nil
+	_, err := c.get("SYNO.API.Auth", 1, "logout",
+		map[string]string{
+			"session": c.session,
+		},
+		map[int]string{
+			400: "No such account or incorrect password",
+			401: "Account disabled",
+			402: "Permission denied",
+			403: "2-step verification code required",
+			404: "Failed to authenticate 2-step verification code",
+		},
+	)
+	//clear session
+	c.session = ""
+	c.httpClient.Jar = nil
+	c.sid = ""
+	return err
 }
 
 // vi:set fileencoding=utf-8 tabstop=4 ai
