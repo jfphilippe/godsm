@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 	"strconv"
 	"strings"
@@ -99,8 +98,13 @@ func (c *GoDsmImpl) get(api string, version int, method string, params map[strin
 	for k, v := range params {
 		query.Set(k, v)
 	}
+	// Eventually set sid
+	if "" != c.sid {
+		query.Set("_sid", c.sid)
+	}
 	u.RawQuery = strings.Replace(query.Encode(), "+", "%20", -1)
 
+	// call URL
 	resp, err := c.httpClient.Get(u.String())
 	if err != nil {
 		return nil, err
@@ -119,15 +123,16 @@ func (c *GoDsmImpl) get(api string, version int, method string, params map[strin
 	}
 
 	// analyse response
-	// TODO check data type (map[string]interface{})
-	jsonMap := data.(map[string]interface{})
-	success := jsonMap["success"].(bool)
-	if success {
-		return jsonMap["data"], nil
+	code := 0
+	jsonMap, ok := data.(map[string]interface{})
+	if ok {
+		success := jsonMap["success"].(bool)
+		if success {
+			return jsonMap["data"], nil
+		}
+		// check error code and convert it to DsmError
+		code = c.errCode(jsonMap)
 	}
-	// check error code and convert it to DsmError
-	code := c.errCode(jsonMap)
-
 	return nil, c.errorFromCode(code, respErrors)
 }
 
@@ -170,70 +175,6 @@ func (c *GoDsmImpl) errorFromCode(code int, respErrors map[int]string) error {
 		}
 	}
 	return &DsmError{Code: code, Msg: msg}
-}
-
-// Login Try to connect given user.
-// if sid is true, use sid for session tracking, otherwise use cookie
-func (c *GoDsmImpl) Login(user string, passwd string, sid bool) error {
-	format := "cookie"
-	if sid {
-		format = "sid"
-	} else {
-		// Set a store for cookies
-		cookieJar, err := cookiejar.New(nil)
-		if nil != err {
-			return err
-		}
-		c.httpClient.Jar = cookieJar
-	}
-	// TODO : create a uniq session
-	c.session = "TEST"
-	data, err := c.get("SYNO.API.Auth", 2, "login",
-		map[string]string{
-			"account": user,
-			"passwd":  passwd,
-			"session": c.session,
-			"format":  format,
-		},
-		map[int]string{
-			400: "No such account or incorrect password",
-			401: "Account disabled",
-			402: "Permission denied",
-			403: "2-step verification code required",
-			404: "Failed to authenticate 2-step verification code",
-		},
-	)
-	if nil == err {
-		// fetch sid
-		fmt.Println(data)
-	} else {
-		// clear session ID
-		c.session = ""
-		c.httpClient.Jar = nil
-		c.sid = ""
-	}
-	return err
-}
-
-// Logout logout current session.
-func (c *GoDsmImpl) Logout() error {
-	_, err := c.get("SYNO.API.Auth", 1, "logout",
-		map[string]string{
-			"session": c.session,
-		},
-		map[int]string{
-			400: "No such account or incorrect password",
-			401: "Account disabled",
-			402: "Permission denied",
-			403: "2-step verification code required",
-			404: "Failed to authenticate 2-step verification code",
-		},
-	)
-	//clear session
-	c.session = ""
-	c.httpClient.Jar = nil
-	c.sid = ""
-	return err
 }
 
 // vi:set fileencoding=utf-8 tabstop=4 ai
