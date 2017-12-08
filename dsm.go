@@ -11,6 +11,11 @@ type GoDsm interface {
 	Login(user string, passwd string, sid bool) error
 	LoadAllAPIInfo() error
 	Logout() error
+	SystemUtilization() (map[string]interface{}, error)
+	StorageInfo() (map[string]interface{}, error)
+	DsmInfo() (map[string]interface{}, error)
+	Network() (map[string]interface{}, error)
+	Users(offset, limit int) (map[string]interface{}, error)
 }
 
 // DsmError error

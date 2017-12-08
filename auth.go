@@ -4,7 +4,6 @@
 package godsm
 
 import (
-	"fmt"
 	"net/http/cookiejar"
 )
 
@@ -26,7 +25,7 @@ func (c *GoDsmImpl) Login(account string, passwd string, sid bool) error {
 	if "" == c.session {
 		c.session = "TEST"
 	}
-	data, err := c.get("SYNO.API.Auth", 2, "login",
+	data, err := c.getJSON("SYNO.API.Auth", 2, "login",
 		map[string]string{
 			"account": account,
 			"passwd":  passwd,
@@ -43,11 +42,9 @@ func (c *GoDsmImpl) Login(account string, passwd string, sid bool) error {
 	)
 	if nil == err {
 		// fetch sid
-		fmt.Println(data)
 		jsonMap, ok := data.(map[string]interface{})
 		if ok {
 			c.sid = jsonMap["sid"].(string)
-			fmt.Println("sid :", c.sid)
 		}
 	} else {
 		// clear session ID
@@ -60,7 +57,7 @@ func (c *GoDsmImpl) Login(account string, passwd string, sid bool) error {
 
 // Logout logout current session.
 func (c *GoDsmImpl) Logout() error {
-	_, err := c.get("SYNO.API.Auth", 1, "logout",
+	_, err := c.getJSON("SYNO.API.Auth", 1, "logout",
 		map[string]string{
 			"session": c.session,
 		},

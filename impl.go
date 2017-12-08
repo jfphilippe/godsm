@@ -13,9 +13,9 @@ import (
 	"strings"
 )
 
-// GoDsmImpl implements interface
+// GoDsmImpl implements GoDsm interface
 type GoDsmImpl struct {
-	sid        string // current sid , "" if not authenticated
+	sid        string // current sid , "" if not used
 	session    string // current session name
 	dsmURL     *url.URL
 	httpClient *http.Client
@@ -38,9 +38,20 @@ func NewDSM(dsmUrl string) (GoDsm, error) {
 	return &dsm, nil
 }
 
+// session return current session name
+func (c *GoDsmImpl) Session() string {
+	return c.session
+}
+
+// Set Session set session name
+// Set Session <em>before</em> Login.
+func (c *GoDsmImpl) SetSession(s string) {
+	c.session = s
+}
+
 // LoadAllAPIInfo load all DsmAPIInfo in cache.
 func (c *GoDsmImpl) LoadAllAPIInfo() error {
-	data, err := c.get("SYNO.API.Info", 1, "query",
+	data, err := c.getJSON("SYNO.API.Info", 1, "query",
 		map[string]string{
 			"query": "all",
 		},
@@ -55,12 +66,10 @@ func (c *GoDsmImpl) LoadAllAPIInfo() error {
 		if nil == err {
 			// store/replace items in cache
 			for k, v := range keys {
-				v.Key = k
 				c.apis[k] = &DsmAPIInfo{Key: k, Path: v.Path, RequestFormat: v.RequestFormat, MinVersion: v.MinVersion, MaxVersion: v.MaxVersion}
 			}
 		}
 		//fmt.Println(c.apis)
-
 	}
 	return err
 }
@@ -82,7 +91,7 @@ func (c *GoDsmImpl) APIInfo(api string) (*DsmAPIInfo, error) {
 }
 
 // send send a query
-func (c *GoDsmImpl) get(api string, version int, method string, params map[string]string, respErrors map[int]string) (interface{}, error) {
+func (c *GoDsmImpl) getJSON(api string, version int, method string, params map[string]string, respErrors map[int]string) (interface{}, error) {
 	apiInfo, err := c.APIInfo(api)
 	if nil != err {
 		return nil, err
@@ -102,6 +111,11 @@ func (c *GoDsmImpl) get(api string, version int, method string, params map[strin
 	if "" != c.sid {
 		query.Set("_sid", c.sid)
 	}
+	// and session
+	if "" != c.session {
+		query.Set("session", c.session)
+	}
+
 	u.RawQuery = strings.Replace(query.Encode(), "+", "%20", -1)
 
 	// call URL
