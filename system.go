@@ -2,6 +2,7 @@
 // DSM Client in Go
 // This file contains undocumented Web API
 // To stay safe, most API are read only.
+
 package godsm
 
 import (
@@ -20,7 +21,7 @@ func (c *GoDsmImpl) SystemUtilization() (map[string]interface{}, error) {
 	return data.(map[string]interface{}), nil
 }
 
-// SystemUtilization get system utilization infos
+// StorageInfo get system utilization infos
 func (c *GoDsmImpl) StorageInfo() (map[string]interface{}, error) {
 	data, err := c.getJSON("SYNO.Storage.CGI.Storage", 1, "load_info",
 		map[string]string{},
@@ -44,7 +45,7 @@ func (c *GoDsmImpl) DsmInfo() (map[string]interface{}, error) {
 	return data.(map[string]interface{}), nil
 }
 
-// Networks return Network Configuration
+// Network return Network Configuration
 func (c *GoDsmImpl) Network() (map[string]interface{}, error) {
 	data, err := c.getJSON("SYNO.DSM.Network", 2, "list",
 		map[string]string{},

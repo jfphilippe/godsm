@@ -6,7 +6,7 @@ package godsm
 import "fmt"
 
 // GoDsm define interface
-type GoDsm interface {
+type Dsm interface {
 	APIInfo(api string) (*DsmAPIInfo, error)
 	Login(user string, passwd string, sid bool) error
 	LoadAllAPIInfo() error
@@ -31,7 +31,7 @@ func (d *DsmError) Error() string {
 	return fmt.Sprintf("Error '%s' (%d)", d.Msg, d.Code)
 }
 
-// DsmApiInfo memorize Api info
+// DsmAPIInfo memorize Api info
 type DsmAPIInfo struct {
 	Key           string
 	Path          string

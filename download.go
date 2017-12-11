@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Jean-François PHILIPPE
 // DSM Client in Go
 // DownloadStation API
+
 package godsm
 
 import (
@@ -72,6 +73,10 @@ func (c *GoDsmImpl) DlSetServer(cfg map[string]string) error {
 	)
 	return err
 }
+
+// ===========================================================================
+// DownloadStation Schedule API
+// ===========================================================================
 
 // DlSchedConfig get downloadStation Schedule Config.
 func (c *GoDsmImpl) DlSchedConfig() (map[string]interface{}, error) {

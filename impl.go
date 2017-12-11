@@ -23,8 +23,8 @@ type GoDsmImpl struct {
 }
 
 // NewDSM Build a new DSM
-func NewDSM(dsmUrl string) (GoDsm, error) {
-	u, err := url.ParseRequestURI(dsmUrl)
+func NewDSM(dsmURL string) (Dsm, error) {
+	u, err := url.ParseRequestURI(dsmURL)
 	if nil != err {
 		return nil, err
 	}
@@ -38,12 +38,12 @@ func NewDSM(dsmUrl string) (GoDsm, error) {
 	return &dsm, nil
 }
 
-// session return current session name
+// Session return current session name
 func (c *GoDsmImpl) Session() string {
 	return c.session
 }
 
-// Set Session set session name
+// SetSession set session name
 // Set Session <em>before</em> Login.
 func (c *GoDsmImpl) SetSession(s string) {
 	c.session = s
@@ -90,11 +90,11 @@ func (c *GoDsmImpl) APIInfo(api string) (*DsmAPIInfo, error) {
 	return info, nil
 }
 
-// send send a query
-func (c *GoDsmImpl) getJSON(api string, version int, method string, params map[string]string, respErrors map[int]string) (interface{}, error) {
+// createGetURL create an URL with given parameters.
+func (c *GoDsmImpl) createGetURL(api string, version int, method string, params map[string]string) (string, error) {
 	apiInfo, err := c.APIInfo(api)
 	if nil != err {
-		return nil, err
+		return "", err
 	}
 	// Build URL
 	u := url.URL{Scheme: c.dsmURL.Scheme, Host: c.dsmURL.Host, Path: c.dsmURL.Path + apiInfo.Path}
@@ -104,8 +104,10 @@ func (c *GoDsmImpl) getJSON(api string, version int, method string, params map[s
 	query.Set("version", strconv.Itoa(version))
 	query.Set("method", method)
 	// complete with given params.
-	for k, v := range params {
-		query.Set(k, v)
+	if nil != params {
+		for k, v := range params {
+			query.Set(k, v)
+		}
 	}
 	// Eventually set sid
 	if "" != c.sid {
@@ -117,9 +119,18 @@ func (c *GoDsmImpl) getJSON(api string, version int, method string, params map[s
 	}
 
 	u.RawQuery = strings.Replace(query.Encode(), "+", "%20", -1)
+	return u.String(), nil
+}
 
+// getJSON send a query
+func (c *GoDsmImpl) getJSON(api string, version int, method string, params map[string]string, respErrors map[int]string) (interface{}, error) {
+	// Create URL
+	url, err := c.createGetURL(api, version, method, params)
+	if err != nil {
+		return nil, err
+	}
 	// call URL
-	resp, err := c.httpClient.Get(u.String())
+	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +175,11 @@ func (c *GoDsmImpl) errCode(data map[string]interface{}) int {
 // errorFromCode convert Error code into an DsmError.
 func (c *GoDsmImpl) errorFromCode(code int, respErrors map[int]string) error {
 	// Try errors for given service
-	msg, found := respErrors[code]
+	msg := ""
+	found := false
+	if nil != respErrors {
+		msg, found = respErrors[code]
+	}
 	if !found {
 		// Try commons errors
 		switch code {
