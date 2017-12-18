@@ -12,8 +12,8 @@ import (
 // SystemUtilization get system utilization infos
 func (c *GoDsmImpl) SystemUtilization() (map[string]interface{}, error) {
 	data, err := c.getJSON("SYNO.Core.System.Utilization", 1, "get",
-		map[string]string{},
-		map[int]string{},
+		nil,
+		nil,
 	)
 	if nil != err {
 		return nil, err
@@ -24,8 +24,8 @@ func (c *GoDsmImpl) SystemUtilization() (map[string]interface{}, error) {
 // StorageInfo get system utilization infos
 func (c *GoDsmImpl) StorageInfo() (map[string]interface{}, error) {
 	data, err := c.getJSON("SYNO.Storage.CGI.Storage", 1, "load_info",
-		map[string]string{},
-		map[int]string{},
+		nil,
+		nil,
 	)
 	if nil != err {
 		return nil, err
@@ -36,8 +36,8 @@ func (c *GoDsmImpl) StorageInfo() (map[string]interface{}, error) {
 // DsmInfo return Generic System info
 func (c *GoDsmImpl) DsmInfo() (map[string]interface{}, error) {
 	data, err := c.getJSON("SYNO.DSM.Info", 2, "getinfo",
-		map[string]string{},
-		map[int]string{},
+		nil,
+		nil,
 	)
 	if nil != err {
 		return nil, err
@@ -48,8 +48,8 @@ func (c *GoDsmImpl) DsmInfo() (map[string]interface{}, error) {
 // Network return Network Configuration
 func (c *GoDsmImpl) Network() (map[string]interface{}, error) {
 	data, err := c.getJSON("SYNO.DSM.Network", 2, "list",
-		map[string]string{},
-		map[int]string{},
+		nil,
+		nil,
 	)
 	if nil != err {
 		return nil, err
@@ -69,7 +69,19 @@ func (c *GoDsmImpl) Users(offset, limit int) (map[string]interface{}, error) {
 	}
 	data, err := c.getJSON("SYNO.Core.User", 1, "list",
 		params,
-		map[int]string{},
+		nil,
+	)
+	if nil != err {
+		return nil, err
+	}
+	return data.(map[string]interface{}), nil
+}
+
+// User return User id
+func (c *GoDsmImpl) User(name string) (map[string]interface{}, error) {
+	data, err := c.getJSON("SYNO.Core.User", 1, "get",
+		map[string]string{"name": name},
+		nil,
 	)
 	if nil != err {
 		return nil, err

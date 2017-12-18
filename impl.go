@@ -39,6 +39,11 @@ func NewDSM(dsmURL string) (Dsm, error) {
 }
 
 // Session return current session name
+func (c *GoDsmImpl) System() System {
+	return c
+}
+
+// Session return current session name
 func (c *GoDsmImpl) Session() string {
 	return c.session
 }
@@ -117,8 +122,8 @@ func (c *GoDsmImpl) createGetURL(api string, version int, method string, params 
 	if "" != c.session {
 		query.Set("session", c.session)
 	}
-
-	u.RawQuery = strings.Replace(query.Encode(), "+", "%20", -1)
+	u.RawQuery = query.Encode()
+	//u.RawQuery = strings.Replace(query.Encode(), "+", "%20", -1)
 	return u.String(), nil
 }
 
@@ -129,6 +134,7 @@ func (c *GoDsmImpl) getJSON(api string, version int, method string, params map[s
 	if err != nil {
 		return nil, err
 	}
+	// fmt.Println(url)
 	// call URL
 	resp, err := c.httpClient.Get(url)
 	if err != nil {

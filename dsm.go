@@ -11,11 +11,17 @@ type Dsm interface {
 	Login(user string, passwd string, sid bool) error
 	LoadAllAPIInfo() error
 	Logout() error
-	SystemUtilization() (map[string]interface{}, error)
-	StorageInfo() (map[string]interface{}, error)
+	System() System
+}
+
+// System get System informations
+type System interface {
 	DsmInfo() (map[string]interface{}, error)
 	Network() (map[string]interface{}, error)
+	StorageInfo() (map[string]interface{}, error)
+	SystemUtilization() (map[string]interface{}, error)
 	Users(offset, limit int) (map[string]interface{}, error)
+	User(name string) (map[string]interface{}, error)
 }
 
 // DsmError error

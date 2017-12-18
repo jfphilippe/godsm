@@ -11,8 +11,8 @@ import (
 // DlInfo get downloadStation info.
 func (c *GoDsmImpl) DlInfo() (map[string]interface{}, error) {
 	data, err := c.getJSON("SYNO.DownloadStation.Info", 1, "getinfo",
-		map[string]string{},
-		map[int]string{},
+		nil,
+		nil,
 	)
 	if nil != err {
 		return nil, err
@@ -23,8 +23,8 @@ func (c *GoDsmImpl) DlInfo() (map[string]interface{}, error) {
 // DlInfoConfig get downloadStation info.
 func (c *GoDsmImpl) DlInfoConfig() (map[string]interface{}, error) {
 	data, err := c.getJSON("SYNO.DownloadStation.Info", 1, "getconfig",
-		map[string]string{},
-		map[int]string{},
+		nil,
+		nil,
 	)
 	if nil != err {
 		return nil, err
@@ -69,7 +69,7 @@ func (c *GoDsmImpl) DlSetServer(cfg map[string]string) error {
 	}
 	_, err := c.getJSON("SYNO.DownloadStation.Info", 1, "setserverconfig",
 		params,
-		map[int]string{},
+		nil,
 	)
 	return err
 }
@@ -81,8 +81,8 @@ func (c *GoDsmImpl) DlSetServer(cfg map[string]string) error {
 // DlSchedConfig get downloadStation Schedule Config.
 func (c *GoDsmImpl) DlSchedConfig() (map[string]interface{}, error) {
 	data, err := c.getJSON("SYNO.DownloadStation.Schedule", 1, "getconfig",
-		map[string]string{},
-		map[int]string{},
+		nil,
+		nil,
 	)
 	if nil != err {
 		return nil, err
@@ -108,7 +108,7 @@ func (c *GoDsmImpl) DlSchedSetConfig(cfg map[string]bool) error {
 	}
 	_, err := c.getJSON("SYNO.DownloadStation.Schedule", 1, "setconfig",
 		params,
-		map[int]string{},
+		nil,
 	)
 	return err
 }
