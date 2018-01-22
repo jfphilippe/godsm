@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Jean-François PHILIPPE
+// Copyright (c) 2018 Jean-François PHILIPPE
 // DSM Client in Go
 
 package godsm

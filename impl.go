@@ -23,6 +23,7 @@ type GoDsmImpl struct {
 }
 
 // NewDSM Build a new DSM
+// - dsmURL : URL of DSM.
 func NewDSM(dsmURL string) (Dsm, error) {
 	u, err := url.ParseRequestURI(dsmURL)
 	if nil != err {
@@ -43,7 +44,7 @@ func (c *GoDsmImpl) System() System {
 	return c
 }
 
-// Session return current session name
+// Session return current session name, empty string if not set.
 func (c *GoDsmImpl) Session() string {
 	return c.session
 }
@@ -95,7 +96,7 @@ func (c *GoDsmImpl) APIInfo(api string) (*DsmAPIInfo, error) {
 	return info, nil
 }
 
-// createGetURL create an URL with given parameters.
+// createGetURL create an HTTP(S) GET URL with given parameters.
 func (c *GoDsmImpl) createGetURL(api string, version int, method string, params map[string]string) (string, error) {
 	apiInfo, err := c.APIInfo(api)
 	if nil != err {

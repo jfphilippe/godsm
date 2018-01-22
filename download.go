@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Jean-François PHILIPPE
+// Copyright (c) 2018 Jean-François PHILIPPE
 // DSM Client in Go
 // DownloadStation API
 
@@ -32,7 +32,7 @@ func (c *GoDsmImpl) DlInfoConfig() (map[string]interface{}, error) {
 	return data.(map[string]interface{}), nil
 }
 
-// DlSetServer get downloadStation info.
+// DlSetServer set downloadStation info.
 // can only be used by admin users.
 // available configs, one or more of :
 // - bt_max_download (in KB/s, 0 means unlimited)
