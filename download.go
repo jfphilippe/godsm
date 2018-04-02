@@ -112,3 +112,28 @@ func (c *GoDsmImpl) DlSchedSetConfig(cfg map[string]bool) error {
 	)
 	return err
 }
+
+// ===========================================================================
+// DownloadStation Task API
+// ===========================================================================
+
+// Tasks get Tasks List
+func (c *GoDsmImpl) Tasks(offset, limit int) (map[string]interface{}, error) {
+	params := map[string]string{}
+	if offset > 0 {
+		params["offset"] = strconv.Itoa(offset)
+	}
+	if limit > 0 {
+		params["limit"] = strconv.Itoa(limit)
+	}
+	// Details may be retrives through GetInfo
+	// params["additional"] = "detail,file,transfer"
+	data, err := c.getJSON("SYNO.DownloadStation.Task", 1, "list",
+		params,
+		nil,
+	)
+	if nil != err {
+		return nil, err
+	}
+	return data.(map[string]interface{}), nil
+}

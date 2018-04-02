@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // GoDsmImpl implements GoDsm interface
@@ -33,14 +34,23 @@ func NewDSM(dsmURL string) (Dsm, error) {
 	if !strings.HasSuffix(u.Path, "/") {
 		u.Path = u.Path + "/"
 	}
-	dsm := GoDsmImpl{sid: "", dsmURL: u, httpClient: &http.Client{}, apis: make(map[string]*DsmAPIInfo)}
+	// Specify a timeout
+	var netClient = &http.Client{
+		Timeout: time.Second * 20,
+	}
+	dsm := GoDsmImpl{sid: "", dsmURL: u, httpClient: netClient, apis: make(map[string]*DsmAPIInfo)}
 	// Bootstrap SYNO.API.Info
 	dsm.apis["SYNO.API.Info"] = &DsmAPIInfo{Key: "SYNO.API.Info", Path: "query.cgi", RequestFormat: "JSON", MinVersion: 1, MaxVersion: 1}
 	return &dsm, nil
 }
 
-// Session return current session name
+// Session return current System item
 func (c *GoDsmImpl) System() System {
+	return c
+}
+
+// Session return current Download item
+func (c *GoDsmImpl) Download() Download {
 	return c
 }
 

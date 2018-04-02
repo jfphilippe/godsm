@@ -12,6 +12,7 @@ type Dsm interface {
 	LoadAllAPIInfo() error
 	Logout() error
 	System() System
+	Download() Download
 }
 
 // System get System informations
@@ -22,6 +23,10 @@ type System interface {
 	SystemUtilization() (map[string]interface{}, error)
 	Users(offset, limit int) (map[string]interface{}, error)
 	User(name string) (map[string]interface{}, error)
+}
+
+type Download interface {
+	Tasks(offset, limit int) (map[string]interface{}, error)
 }
 
 // DsmError error
